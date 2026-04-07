@@ -21,7 +21,7 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
 }
 .card.active { background:#e0e0e0; }
 
-.title { font-size:18px; margin-bottom:8px; }
+.title { font-size:18px; margin-bottom:5px; }
 
 .row {
     display:flex;
@@ -42,6 +42,12 @@ input { padding:6px; font-size:16px; }
 
 .result { color:green; font-weight:bold; }
 
+.delete-btn {
+    color:red;
+    font-size:14px;
+    margin-top:5px;
+}
+
 .add-box {
     background:#fff;
     padding:10px;
@@ -49,7 +55,6 @@ input { padding:6px; font-size:16px; }
     margin:10px;
 }
 
-/* 按鈕 */
 .fab-copy, .fab-clear{
     position:fixed;
     right:20px;
@@ -118,7 +123,6 @@ function save(){
     localStorage.setItem("data", JSON.stringify(data));
 }
 
-// 🔥 初始渲染（只做一次）
 function render(){
     const app = document.getElementById("app");
     app.innerHTML = "";
@@ -129,6 +133,8 @@ function render(){
         const div = document.createElement("div");
         div.className = "card";
         div.id = "card"+i;
+
+        let isCustom = i >= defaultItems.length;
 
         div.innerHTML = `
         <div class="title">${item.icon||""} ${item.name}</div>
@@ -144,6 +150,8 @@ function render(){
 
         <div>箱重：${item.tare}</div>
         <div class="result" id="result${i}">→ 實秤：0 kg</div>
+
+        ${isCustom ? `<div class="delete-btn" onclick="deleteItem(${i})">🗑 刪除品項</div>` : ``}
         `;
 
         app.appendChild(div);
@@ -152,7 +160,6 @@ function render(){
     calcAll();
 }
 
-// 🔥 更新資料（不重刷）
 function update(i,key,val){
     if(!data[i]) data[i]={};
     data[i][key]=val;
@@ -160,7 +167,6 @@ function update(i,key,val){
     calcAll();
 }
 
-// 🔥 即時計算
 function calcAll(){
     items.forEach((item,i)=>{
         const d = data[i] || {};
@@ -168,16 +174,13 @@ function calcAll(){
         let result = (d.weight||0) - (item.tare*(d.count||0)) - ((d.pallet==1)?PALLET:0);
         if(result<0) result=0;
 
-        const el = document.getElementById("result"+i);
-        if(el) el.innerText = "→ 實秤：" + result.toFixed(2) + " kg";
+        document.getElementById("result"+i).innerText = "→ 實秤：" + result.toFixed(2) + " kg";
 
         const card = document.getElementById("card"+i);
-        if(card){
-            if(d.weight||d.count||d.pallet){
-                card.classList.add("active");
-            }else{
-                card.classList.remove("active");
-            }
+        if(d.weight||d.count||d.pallet){
+            card.classList.add("active");
+        } else {
+            card.classList.remove("active");
         }
     });
 }
@@ -198,6 +201,18 @@ function add(){
 
     document.getElementById("name").value="";
     document.getElementById("tare").value="";
+}
+
+// 🗑 刪除
+function deleteItem(i){
+    if(!confirm("確定刪除此品項？")) return;
+
+    savedItems.splice(i - defaultItems.length,1);
+    items.splice(i,1);
+    delete data[i];
+
+    save();
+    render();
 }
 
 // 🗑 清空
@@ -227,7 +242,6 @@ function copy(){
     alert("已複製");
 }
 
-// 啟動
 render();
 
 </script>
