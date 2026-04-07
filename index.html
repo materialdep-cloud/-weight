@@ -18,9 +18,15 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
     box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* 黑底 */
+/* 🟢 淺綠 */
 .card.active {
-    background:#222;
+    background:#c8e6c9;
+    color:#000;
+}
+
+/* 🔴 異常 */
+.card.error {
+    background:#c62828;
     color:#fff;
 }
 
@@ -43,14 +49,15 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
 
 input { padding:6px; font-size:16px; }
 
+/* ⚫ 實秤改黑色 */
 .result {
     font-size:22px;
     font-weight:bold;
-    color:#00c853;
+    color:#000;
 }
 
 .warning {
-    color:#ff5252;
+    color:#ffeb3b;
     font-size:16px;
     margin-left:5px;
 }
@@ -80,8 +87,8 @@ input { padding:6px; font-size:16px; }
     font-size:24px;
 }
 
-.fab-copy { bottom:20px; background:#2e7d32; }
-.fab-clear { bottom:90px; background:#d32f2f; }
+.fab-copy { bottom:90px; background:#2e7d32; }
+.fab-clear { bottom:20px; background:#d32f2f; }
 
 </style>
 </head>
@@ -97,35 +104,43 @@ input { padding:6px; font-size:16px; }
     <button onclick="add()">➕新增</button>
 </div>
 
-<div class="fab-clear" onclick="clearData()">🗑</div>
 <div class="fab-copy" onclick="copy()">📋</div>
+<div class="fab-clear" onclick="clearData()">🗑</div>
 
 <script>
 
 const PALLET = 8.2;
 
+function createItem(name, tare, icon=""){
+    return {
+        id: Date.now() + Math.random(),
+        name,
+        tare,
+        icon
+    };
+}
+
 let defaultItems = [
-{name:"歐式生菜", icon:"🥬✨", tare:1.8},
-{name:"日本山藥(無填充物)", icon:"🥔", tare:0.73},
-{name:"豆苗", icon:"🌿", tare:1.2},
-{name:"苜蓿", icon:"🌱", tare:0.89},
-{name:"興家洋菇", icon:"🍄", tare:0.65},
-{name:"本產美生菜", icon:"🥬", tare:1.45},
-{name:"本產蘿美(牛皮紙箱)", icon:"🥬", tare:1.51},
-{name:"本產蘿美(白箱)", icon:"🥬", tare:1.42},
-{name:"進口美生菜", icon:"📦🥬", tare:1.22},
-{name:"進口蘿美(大包)", icon:"📦🥬", tare:1.06},
-{name:"進口蘿美(小包)", icon:"📦🥬", tare:1.51},
-{name:"小黃瓜/番茄黑苔", icon:"🥒🍅", tare:1.55},
-{name:"辣椒", icon:"🌶️", tare:1.2},
-{name:"櫛瓜", icon:"🥒", tare:0.84},
-{name:"日本紅春香地瓜", icon:"🍠", tare:0.45},
-{name:"日本大蔥", icon:"🧅", tare:0.45}
+createItem("歐式生菜",1.8,"🥬✨"),
+createItem("日本山藥(無填充物)",0.73,"🥔"),
+createItem("豆苗",1.2,"🌿"),
+createItem("苜蓿",0.89,"🌱"),
+createItem("興家洋菇",0.65,"🍄"),
+createItem("本產美生菜",1.45,"🥬"),
+createItem("本產蘿美(牛皮紙箱)",1.51,"🥬"),
+createItem("本產蘿美(白箱)",1.42,"🥬"),
+createItem("進口美生菜",1.22,"📦🥬"),
+createItem("進口蘿美(大包)",1.06,"📦🥬"),
+createItem("進口蘿美(小包)",1.51,"📦🥬"),
+createItem("小黃瓜/番茄黑苔",1.55,"🥒🍅"),
+createItem("辣椒",1.2,"🌶️"),
+createItem("櫛瓜",0.84,"🥒"),
+createItem("日本紅春香地瓜",0.45,"🍠"),
+createItem("日本大蔥",0.45,"🧅")
 ];
 
 let savedItems = JSON.parse(localStorage.getItem("customItems")) || [];
 let items = [...defaultItems, ...savedItems];
-
 let data = JSON.parse(localStorage.getItem("data")) || {};
 
 function save(){
@@ -137,28 +152,27 @@ function render(){
     const app = document.getElementById("app");
     app.innerHTML = "";
 
-    items.forEach((item,i)=>{
-        const d = data[i] || {};
-        let isCustom = i >= defaultItems.length;
+    items.forEach((item)=>{
+        const d = data[item.id] || {};
+        let isCustom = savedItems.find(x=>x.id===item.id);
 
         const div = document.createElement("div");
         div.className = "card";
-        div.id = "card"+i;
+        div.id = "card"+item.id;
 
         div.innerHTML = `
         <div class="title">${item.icon||""} ${item.name}</div>
 
         <div class="row">
-            <input placeholder="總重" value="${d.weight||""}" oninput="update(${i},'weight',this.value)">
-            <input placeholder="件數" value="${d.count||""}" oninput="update(${i},'count',this.value)">
-            <input placeholder="棧板" value="${d.pallet||""}" 
-                oninput="this.value=this.value.replace(/[^1]/g,'');update(${i},'pallet',this.value)">
+            <input type="number" placeholder="總重" value="${d.weight||""}" oninput="update('${item.id}','weight',this.value)">
+            <input type="number" placeholder="件數" value="${d.count||""}" oninput="update('${item.id}','count',this.value)">
+            <input placeholder="棧板" value="${d.pallet||""}" oninput="this.value=this.value.replace(/[^1]/g,'');update('${item.id}','pallet',this.value)">
         </div>
 
         <div>箱重：${item.tare}</div>
-        <div class="result" id="result${i}"></div>
+        <div class="result" id="result${item.id}"></div>
 
-        ${isCustom ? `<div class="delete-btn" onclick="deleteItem(${i})">🗑 刪除品項</div>` : ``}
+        ${isCustom ? `<div class="delete-btn" onclick="deleteItem('${item.id}')">🗑 刪除品項</div>` : ``}
         `;
 
         app.appendChild(div);
@@ -167,19 +181,19 @@ function render(){
     calcAll();
 }
 
-function update(i,key,val){
-    if(!data[i]) data[i]={};
-    data[i][key]=val;
+function update(id,key,val){
+    if(!data[id]) data[id]={};
+    data[id][key]=val;
     save();
     calcAll();
 }
 
 function calcAll(){
-    items.forEach((item,i)=>{
-        const d = data[i] || {};
+    items.forEach((item)=>{
+        const d = data[item.id] || {};
 
-        let weight = d.weight||0;
-        let count = d.count||0;
+        let weight = parseFloat(d.weight) || 0;
+        let count = parseFloat(d.count) || 0;
         let pallet = (d.pallet==1)?PALLET:0;
 
         let deduction = (item.tare*count)+pallet;
@@ -188,26 +202,35 @@ function calcAll(){
 
         let warning = weight < deduction;
 
-        const el = document.getElementById("result"+i);
-        el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
+        let extra = "";
+        if(["苜蓿","豆苗"].includes(item.name)){
+            extra = `（${(result/0.6).toFixed(2)} 台斤）`;
+        }
 
-        const card = document.getElementById("card"+i);
+        const el = document.getElementById("result"+item.id);
+        el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${extra} ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
+
+        const card = document.getElementById("card"+item.id);
+
+        card.classList.remove("active","error");
+
         if(d.weight||d.count||d.pallet){
-            card.classList.add("active");
-        } else {
-            card.classList.remove("active");
+            if(warning){
+                card.classList.add("error");
+            }else{
+                card.classList.add("active");
+            }
         }
     });
 }
 
-// ➕ 新增
 function add(){
     const name = document.getElementById("name");
     const tare = document.getElementById("tare");
 
     if(!name.value||!tare.value) return alert("請填資料");
 
-    const newItem = {name:name.value, tare:parseFloat(tare.value)};
+    const newItem = createItem(name.value, parseFloat(tare.value));
     savedItems.push(newItem);
     items.push(newItem);
 
@@ -218,19 +241,17 @@ function add(){
     tare.value="";
 }
 
-// 🗑 刪除
-function deleteItem(i){
+function deleteItem(id){
     if(!confirm("確定刪除此品項？")) return;
 
-    savedItems.splice(i - defaultItems.length,1);
-    items.splice(i,1);
-    delete data[i];
+    savedItems = savedItems.filter(x=>x.id!=id);
+    items = items.filter(x=>x.id!=id);
+    delete data[id];
 
     save();
     render();
 }
 
-// 🗑 清空
 function clearData(){
     if(!confirm("確定要清空全部資料？")) return;
     if(!confirm("⚠️ 無法復原，確定清空？")) return;
@@ -240,31 +261,35 @@ function clearData(){
     render();
 }
 
-// 📋 複製（完整版🔥）
 function copy(){
     let text="";
 
-    items.forEach((item,i)=>{
-        const d=data[i];
+    items.forEach((item)=>{
+        const d=data[item.id];
         if(!d||!d.count) return;
 
-        let weight=d.weight||0;
-        let count=d.count||0;
+        let weight=parseFloat(d.weight)||0;
+        let count=parseFloat(d.count)||0;
         let pallet=(d.pallet==1)?PALLET:0;
 
         let result=weight-(item.tare*count)-pallet;
         if(result<0) result=0;
 
         text+=`${item.name}${count}件\n`;
-
         text+=`實秤：${weight}(總重)`;
-        text+=` - (${item.tare}×${count} 箱/籃重)`;
+        text+=` - (${item.tare}×${count} 箱重)`;
 
         if(pallet){
-            text+=` - ${PALLET}(棧板重)`;
+            text+=` - ${PALLET}(棧板)`;
         }
 
-        text+=` = ${result.toFixed(2)}kg\n\n`;
+        text+=` = ${result.toFixed(2)}kg`;
+
+        if(["苜蓿","豆苗"].includes(item.name)){
+            text+=`（${(result/0.6).toFixed(2)} 台斤）`;
+        }
+
+        text+=`\n\n`;
     });
 
     if(!text){
