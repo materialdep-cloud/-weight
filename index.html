@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>重量扣重計算</title>
 
-<link rel="manifest" href="manifest.json">
-
 <style>
 body { margin:0; font-family:Arial; background:#f0f2f5; }
 .header { background:#2e7d32; color:#fff; padding:15px; text-align:center; font-size:20px; }
@@ -19,7 +17,12 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
     margin-bottom:10px;
     box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
-.card.active { background:#e0e0e0; }
+
+/* 🔥 黑底 */
+.card.active {
+    background:#222;
+    color:#fff;
+}
 
 .title { font-size:18px; margin-bottom:5px; }
 
@@ -40,12 +43,16 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
 
 input { padding:6px; font-size:16px; }
 
-.result { color:green; font-weight:bold; }
+.result {
+    font-size:22px; /* 🔥 放大 */
+    font-weight:bold;
+    color:#00c853;
+}
 
-.delete-btn {
-    color:red;
-    font-size:14px;
-    margin-top:5px;
+.warning {
+    color:#ff5252;
+    font-size:16px;
+    margin-left:5px;
 }
 
 .add-box {
@@ -53,6 +60,11 @@ input { padding:6px; font-size:16px; }
     padding:10px;
     border-radius:10px;
     margin:10px;
+}
+
+.delete-btn {
+    color:#ff5252;
+    margin-top:5px;
 }
 
 .fab-copy, .fab-clear{
@@ -66,7 +78,6 @@ input { padding:6px; font-size:16px; }
     align-items:center;
     color:#fff;
     font-size:24px;
-    z-index:9999;
 }
 
 .fab-copy { bottom:20px; background:#2e7d32; }
@@ -78,7 +89,6 @@ input { padding:6px; font-size:16px; }
 <body>
 
 <div class="header">📦 重量扣重計算</div>
-
 <div class="container" id="app"></div>
 
 <div class="add-box">
@@ -129,27 +139,24 @@ function render(){
 
     items.forEach((item,i)=>{
         const d = data[i] || {};
+        let isCustom = i >= defaultItems.length;
 
         const div = document.createElement("div");
         div.className = "card";
         div.id = "card"+i;
 
-        let isCustom = i >= defaultItems.length;
-
         div.innerHTML = `
         <div class="title">${item.icon||""} ${item.name}</div>
 
         <div class="row">
-            <input placeholder="總重" value="${d.weight||""}" 
-                oninput="update(${i},'weight',this.value)">
-            <input placeholder="件數" value="${d.count||""}" 
-                oninput="update(${i},'count',this.value)">
+            <input placeholder="總重" value="${d.weight||""}" oninput="update(${i},'weight',this.value)">
+            <input placeholder="件數" value="${d.count||""}" oninput="update(${i},'count',this.value)">
             <input placeholder="棧板" value="${d.pallet||""}" 
                 oninput="this.value=this.value.replace(/[^1]/g,'');update(${i},'pallet',this.value)">
         </div>
 
         <div>箱重：${item.tare}</div>
-        <div class="result" id="result${i}">→ 實秤：0 kg</div>
+        <div class="result" id="result${i}"></div>
 
         ${isCustom ? `<div class="delete-btn" onclick="deleteItem(${i})">🗑 刪除品項</div>` : ``}
         `;
@@ -171,10 +178,18 @@ function calcAll(){
     items.forEach((item,i)=>{
         const d = data[i] || {};
 
-        let result = (d.weight||0) - (item.tare*(d.count||0)) - ((d.pallet==1)?PALLET:0);
+        let weight = d.weight||0;
+        let count = d.count||0;
+        let pallet = (d.pallet==1)?PALLET:0;
+
+        let deduction = (item.tare*count)+pallet;
+        let result = weight - deduction;
         if(result<0) result=0;
 
-        document.getElementById("result"+i).innerText = "→ 實秤：" + result.toFixed(2) + " kg";
+        let warning = weight < deduction;
+
+        const el = document.getElementById("result"+i);
+        el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
 
         const card = document.getElementById("card"+i);
         if(d.weight||d.count||d.pallet){
@@ -189,7 +204,6 @@ function calcAll(){
 function add(){
     const name = document.getElementById("name").value;
     const tare = parseFloat(document.getElementById("tare").value);
-
     if(!name||!tare) return alert("請填資料");
 
     const newItem = {name,tare};
@@ -199,8 +213,8 @@ function add(){
     save();
     render();
 
-    document.getElementById("name").value="";
-    document.getElementById("tare").value="";
+    name.value="";
+    tare.value="";
 }
 
 // 🗑 刪除
@@ -225,17 +239,24 @@ function clearData(){
     render();
 }
 
-// 📋 複製
+// 📋 複製（含算式🔥）
 function copy(){
     let text="";
     items.forEach((item,i)=>{
         const d=data[i];
         if(!d||!d.count) return;
 
-        let r=(d.weight||0)-(item.tare*d.count)-((d.pallet==1)?PALLET:0);
-        if(r<0) r=0;
+        let weight=d.weight||0;
+        let count=d.count||0;
+        let pallet=(d.pallet==1)?PALLET:0;
 
-        text+=`${item.name}${d.count}件\n實秤:${r.toFixed(2)}kg\n\n`;
+        let result=weight-(item.tare*count)-pallet;
+        if(result<0) result=0;
+
+        text+=`${item.name}${count}件\n`;
+        text+=`實秤：${weight} - (${item.tare}×${count})`;
+        if(pallet) text+=` - ${PALLET}`;
+        text+=` = ${result.toFixed(2)}kg\n\n`;
     });
 
     navigator.clipboard.writeText(text);
