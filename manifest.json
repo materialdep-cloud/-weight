@@ -1,0 +1,9 @@
+{
+  "name": "重量扣重計算",
+  "short_name": "重量計算",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2e7d32",
+  "icons": []
+}
