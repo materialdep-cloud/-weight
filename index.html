@@ -18,7 +18,7 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
     box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* 🔥 黑底 */
+/* 黑底 */
 .card.active {
     background:#222;
     color:#fff;
@@ -44,7 +44,7 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
 input { padding:6px; font-size:16px; }
 
 .result {
-    font-size:22px; /* 🔥 放大 */
+    font-size:22px;
     font-weight:bold;
     color:#00c853;
 }
@@ -55,16 +55,16 @@ input { padding:6px; font-size:16px; }
     margin-left:5px;
 }
 
+.delete-btn {
+    color:#ff5252;
+    margin-top:5px;
+}
+
 .add-box {
     background:#fff;
     padding:10px;
     border-radius:10px;
     margin:10px;
-}
-
-.delete-btn {
-    color:#ff5252;
-    margin-top:5px;
 }
 
 .fab-copy, .fab-clear{
@@ -202,11 +202,12 @@ function calcAll(){
 
 // ➕ 新增
 function add(){
-    const name = document.getElementById("name").value;
-    const tare = parseFloat(document.getElementById("tare").value);
-    if(!name||!tare) return alert("請填資料");
+    const name = document.getElementById("name");
+    const tare = document.getElementById("tare");
 
-    const newItem = {name,tare};
+    if(!name.value||!tare.value) return alert("請填資料");
+
+    const newItem = {name:name.value, tare:parseFloat(tare.value)};
     savedItems.push(newItem);
     items.push(newItem);
 
@@ -239,9 +240,10 @@ function clearData(){
     render();
 }
 
-// 📋 複製（含算式🔥）
+// 📋 複製（完整版🔥）
 function copy(){
     let text="";
+
     items.forEach((item,i)=>{
         const d=data[i];
         if(!d||!d.count) return;
@@ -254,10 +256,21 @@ function copy(){
         if(result<0) result=0;
 
         text+=`${item.name}${count}件\n`;
-        text+=`實秤：${weight} - (${item.tare}×${count})`;
-        if(pallet) text+=` - ${PALLET}`;
+
+        text+=`實秤：${weight}(總重)`;
+        text+=` - (${item.tare}×${count} 箱/籃重)`;
+
+        if(pallet){
+            text+=` - ${PALLET}(棧板重)`;
+        }
+
         text+=` = ${result.toFixed(2)}kg\n\n`;
     });
+
+    if(!text){
+        alert("沒有可複製資料");
+        return;
+    }
 
     navigator.clipboard.writeText(text);
     alert("已複製");
