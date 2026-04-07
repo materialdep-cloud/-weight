@@ -18,13 +18,11 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
     box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* 🟢 淺綠 */
 .card.active {
     background:#c8e6c9;
     color:#000;
 }
 
-/* 🔴 異常 */
 .card.error {
     background:#c62828;
     color:#fff;
@@ -49,7 +47,6 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
 
 input { padding:6px; font-size:16px; }
 
-/* ⚫ 實秤改黑色 */
 .result {
     font-size:22px;
     font-weight:bold;
@@ -136,7 +133,11 @@ createItem("小黃瓜/番茄黑苔",1.55,"🥒🍅"),
 createItem("辣椒",1.2,"🌶️"),
 createItem("櫛瓜",0.84,"🥒"),
 createItem("日本紅春香地瓜",0.45,"🍠"),
-createItem("日本大蔥",0.45,"🧅")
+createItem("日本大蔥",0.45,"🧅"),
+
+/* 🆕 新增 */
+createItem("阿成南瓜(藍苔)",2.38,"🎃"),
+createItem("栗子南瓜(家福苔)",3.13,"🌰🎃")
 ];
 
 let savedItems = JSON.parse(localStorage.getItem("customItems")) || [];
