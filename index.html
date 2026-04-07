@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>重量扣重計算</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+    font-family: Arial;
+    padding: 10px;
+    background: #f5f5f5;
+}
+
+h2 {
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+input {
+    width: 70px;
+    padding: 6px;
+    font-size: 16px;
+}
+
+.result {
+    font-weight: bold;
+}
+
+.item {
+    text-align: left;
+}
+
+button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📦 重量扣重計算</h2>
+
+<table>
+<tr>
+<th>品項</th>
+<th>總重kg</th>
+<th>件數</th>
+<th>綠園板8.2kg</th>
+<th>箱重kg / 籃重kg</th>
+<th>實秤kg</th>
+</tr>
+
+<tbody id="tableBody"></tbody>
+</table>
+
+<button onclick="copyText()">📋 一鍵複製</button>
+
+<script>
+
+const PALLET_WEIGHT = 8.2;
+
+const items = [
+{name:"辣椒", icon:"🌶️", tare:1.2},
+{name:"櫛瓜", icon:"🥒", tare:0.84},
+{name:"苜蓿", icon:"🌱", tare:0.89},
+{name:"本產美生菜", icon:"🥬", tare:1.45},
+{name:"本產蘿美", icon:"🥬", tare:1.51},
+{name:"進口美生菜", icon:"📦🥬", tare:1.22},
+{name:"進口蘿美(大包)", icon:"📦🥬", tare:1.06},
+{name:"進口蘿美(小包)", icon:"📦🥬", tare:1.51},
+{name:"歐式生菜", icon:"🥬✨", tare:1.8},
+{name:"小黃瓜/番茄苔", icon:"🥒🍅", tare:1.55},
+{name:"興家洋菇苔", icon:"🍄", tare:0.65},
+{name:"豆苗苔", icon:"🌿", tare:1.2},
+{name:"日本紅春香地瓜", icon:"🍠", tare:0.45},
+{name:"日本大蔥", icon:"🧅", tare:0.45}
+];
+
+const tbody = document.getElementById("tableBody");
+
+// 建立表格
+items.forEach((item, i) => {
+    tbody.insertAdjacentHTML("beforeend", `
+    <tr>
+        <td class="item">${item.icon} ${item.name}</td>
+        <td><input type="number" inputmode="decimal" id="weight${i}" oninput="calc()" onfocus="this.select()"></td>
+        <td><input type="number" inputmode="numeric" id="count${i}" oninput="calc()" onfocus="this.select()"></td>
+        <td><input type="number" inputmode="numeric" id="palletFlag${i}" oninput="this.value=this.value.replace(/[^1]/g,''); calc();" onfocus="this.select()"></td>
+        <td><input type="number" inputmode="decimal" id="tare${i}" value="${item.tare}" oninput="calc()" onfocus="this.select()"></td>
+        <td class="result" id="result${i}">0.00</td>
+    </tr>
+    `);
+});
+
+// 計算
+function calc() {
+    items.forEach((_, i) => {
+        let weight = parseFloat(document.getElementById("weight"+i).value) || 0;
+        let count = parseInt(document.getElementById("count"+i).value) || 0;
+        let tare = parseFloat(document.getElementById("tare"+i).value) || 0;
+        let palletFlag = parseInt(document.getElementById("palletFlag"+i).value) || 0;
+
+        let result = weight - (tare * count) - (palletFlag === 1 ? PALLET_WEIGHT : 0);
+        if (result < 0) result = 0;
+
+        const el = document.getElementById("result"+i);
+        el.innerText = result.toFixed(2);
+        el.style.color = result <= 0 ? "#999" : "green";
+    });
+}
+
+// 複製
+function copyText() {
+    let output = "";
+
+    items.forEach((item, i) => {
+        let weight = parseFloat(document.getElementById("weight"+i).value);
+        let count = parseInt(document.getElementById("count"+i).value);
+        let tare = parseFloat(document.getElementById("tare"+i).value);
+        let palletFlag = parseInt(document.getElementById("palletFlag"+i).value) || 0;
+
+        if (!count) return;
+
+        let result = weight - (tare * count) - (palletFlag === 1 ? PALLET_WEIGHT : 0);
+        if (result < 0) result = 0;
+
+        output += `${item.name}${count}件\n`;
+        output += `實秤：${weight} - (${tare}×${count})`;
+        if (palletFlag === 1) output += ` - ${PALLET_WEIGHT}(綠園板)`;
+        output += ` = ${result.toFixed(2)}kg\n\n`;
+    });
+
+    if (!output) {
+        alert("沒有可複製資料");
+        return;
+    }
+
+    navigator.clipboard.writeText(output);
+    alert("已複製！");
+}
+</script>
+
+</body>
+</html>
