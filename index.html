@@ -97,7 +97,7 @@ input { padding:6px; font-size:16px; }
 
 <div class="add-box">
     品名 <input id="name">
-    箱重 <input id="tare" type="number">
+    箱/藍重 <input id="tare" type="number">
     <button onclick="add()">➕新增</button>
 </div>
 
@@ -278,7 +278,7 @@ function copy(){
 
         text+=`${item.name}${count}件\n`;
         text+=`實秤：${weight}(總重)`;
-        text+=` - (${item.tare}×${count} 箱重)`;
+        text+=` - (${item.tare}×${count} 箱/藍重)`;
 
         if(pallet){
             text+=` - ${PALLET}(棧板)`;
