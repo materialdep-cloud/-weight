@@ -148,14 +148,27 @@ function save(){
     localStorage.setItem("data", JSON.stringify(data));
 }
 
+// 🔍 模糊搜尋（任意字匹配）
+function fuzzyMatch(name, keyword){
+    name = name.toLowerCase();
+    keyword = keyword.toLowerCase().replace(/\s+/g,"");
+
+    let i = 0;
+    for(let char of name){
+        if(char === keyword[i]) i++;
+        if(i === keyword.length) return true;
+    }
+    return keyword === "" ? true : false;
+}
+
 function render(){
     const app = document.getElementById("app");
     app.innerHTML = "";
 
-    const keyword = document.getElementById("search")?.value?.toLowerCase() || "";
+    const keyword = document.getElementById("search")?.value || "";
 
     items
-    .filter(item => item.name.toLowerCase().includes(keyword))
+    .filter(item => fuzzyMatch(item.name, keyword))
     .forEach((item)=>{
 
         const d = data[item.id] || {};
@@ -169,16 +182,16 @@ function render(){
         <div class="title">${item.icon||""} ${item.name}</div>
 
         <div class="row">
-            <input type="number" min="0.0001" step="any" inputmode="decimal"
+            <input type="number" min="0.0001" step="any"
                 placeholder="總重" value="${d.weight||""}"
                 oninput="update('${item.id}','weight',this.value)">
                 
-            <input type="number" min="1" step="1" inputmode="numeric"
+            <input type="number" min="1" step="1"
                 placeholder="件數" value="${d.count||""}"
                 oninput="update('${item.id}','count',this.value)">
         </div>
 
-        <label style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+        <label>
             <input type="checkbox"
                 ${d.pallet==1 ? "checked" : ""}
                 onchange="update('${item.id}','pallet',this.checked?1:0)">
@@ -204,10 +217,9 @@ function update(id,key,val){
         let num = parseFloat(val);
 
         if(key==="count"){
-            num = Math.floor(num); // 👉 強制整數
+            num = Math.floor(num);
         }
 
-        // 🚫 禁止 0 / 負數 / NaN
         if(num <= 0 || isNaN(num)){
             val = "";
         }else{
@@ -300,6 +312,9 @@ function deleteItem(id){
     savedItems = savedItems.filter(x=>x.id!=id);
     items = items.filter(x=>x.id!=id);
     delete data[id];
+
+    // 👉 清空搜尋（恢復全部顯示）
+    document.getElementById("search").value = "";
 
     save();
     render();
