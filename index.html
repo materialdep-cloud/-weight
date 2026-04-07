@@ -8,12 +8,37 @@
 <style>
 body { font-family: Arial; padding: 10px; background: #f5f5f5; }
 h2 { text-align: center; }
+
 table { width: 100%; border-collapse: collapse; background: white; }
 th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-input { width: 70px; padding: 6px; font-size: 16px; }
+
+input {
+    width: 70px;
+    padding: 6px;
+    font-size: 16px;
+}
+
 .result { font-weight: bold; }
 .item { text-align: left; }
-button { margin-top: 15px; padding: 10px 20px; font-size: 16px; }
+
+button {
+    margin-top: 10px;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.add-box {
+    background: white;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+}
+
+/* ✅ 有輸入變灰 */
+.row-active {
+    background-color: #e0e0e0;
+}
 </style>
 </head>
 
@@ -34,13 +59,21 @@ button { margin-top: 15px; padding: 10px 20px; font-size: 16px; }
 <tbody id="tableBody"></tbody>
 </table>
 
+<!-- ➕ 新增品項（已移到底） -->
+<div class="add-box">
+    品名 <input id="newName">
+    箱重 <input id="newTare" type="number" step="0.01">
+    圖示 <input id="newIcon" placeholder="可空">
+    <button onclick="addItem()">➕ 新增品項</button>
+</div>
+
 <button onclick="copyText()">📋 一鍵複製</button>
 
 <script>
 
 const PALLET_WEIGHT = 8.2;
 
-const items = [
+let items = [
 {name:"歐式生菜", icon:"🥬✨", tare:1.8},
 {name:"日本山藥(無填充物)", icon:"🥔", tare:0.73},
 {name:"豆苗", icon:"🌿", tare:1.2},
@@ -62,33 +95,64 @@ const items = [
 const tbody = document.getElementById("tableBody");
 
 // 建立表格
-items.forEach((item, i) => {
-    tbody.insertAdjacentHTML("beforeend", `
-    <tr>
-        <td class="item">${item.icon} ${item.name}</td>
-        <td><input type="number" inputmode="decimal" id="weight${i}" oninput="calc()" onfocus="this.select()"></td>
-        <td><input type="number" inputmode="numeric" id="count${i}" oninput="calc()" onfocus="this.select()"></td>
-        <td><input type="number" inputmode="numeric" id="palletFlag${i}" oninput="this.value=this.value.replace(/[^1]/g,''); calc();" onfocus="this.select()"></td>
-        <td><input type="number" inputmode="decimal" id="tare${i}" value="${item.tare}" oninput="calc()" onfocus="this.select()"></td>
-        <td class="result" id="result${i}">0.00</td>
-    </tr>
-    `);
-});
+function renderTable() {
+    tbody.innerHTML = "";
 
-// 計算
+    items.forEach((item, i) => {
+        tbody.insertAdjacentHTML("beforeend", `
+        <tr id="row${i}">
+            <td class="item">${item.icon || ""} ${item.name}</td>
+            <td><input type="number" id="weight${i}" oninput="calc()" onfocus="this.select()"></td>
+            <td><input type="number" id="count${i}" oninput="calc()" onfocus="this.select()"></td>
+            <td><input type="number" id="palletFlag${i}" oninput="this.value=this.value.replace(/[^1]/g,''); calc();" onfocus="this.select()"></td>
+            <td>${item.tare}</td>
+            <td class="result" id="result${i}">0.00</td>
+        </tr>
+        `);
+    });
+}
+
+// 新增品項
+function addItem() {
+    const name = document.getElementById("newName").value;
+    const tare = parseFloat(document.getElementById("newTare").value);
+    const icon = document.getElementById("newIcon").value;
+
+    if (!name || isNaN(tare)) {
+        alert("請輸入品名與箱重");
+        return;
+    }
+
+    items.push({ name, tare, icon });
+
+    renderTable();
+
+    document.getElementById("newName").value = "";
+    document.getElementById("newTare").value = "";
+    document.getElementById("newIcon").value = "";
+}
+
+// 計算 + 變灰
 function calc() {
-    items.forEach((_, i) => {
+    items.forEach((item, i) => {
         let weight = parseFloat(document.getElementById("weight"+i).value) || 0;
         let count = parseInt(document.getElementById("count"+i).value) || 0;
-        let tare = parseFloat(document.getElementById("tare"+i).value) || 0;
         let palletFlag = parseInt(document.getElementById("palletFlag"+i).value) || 0;
 
-        let result = weight - (tare * count) - (palletFlag === 1 ? PALLET_WEIGHT : 0);
+        let result = weight - (item.tare * count) - (palletFlag === 1 ? PALLET_WEIGHT : 0);
         if (result < 0) result = 0;
 
         const el = document.getElementById("result"+i);
         el.innerText = result.toFixed(2);
         el.style.color = result <= 0 ? "#999" : "green";
+
+        // ✅ 反灰判斷
+        const row = document.getElementById("row"+i);
+        if (weight || count || palletFlag) {
+            row.classList.add("row-active");
+        } else {
+            row.classList.remove("row-active");
+        }
     });
 }
 
@@ -99,16 +163,15 @@ function copyText() {
     items.forEach((item, i) => {
         let weight = parseFloat(document.getElementById("weight"+i).value);
         let count = parseInt(document.getElementById("count"+i).value);
-        let tare = parseFloat(document.getElementById("tare"+i).value);
         let palletFlag = parseInt(document.getElementById("palletFlag"+i).value) || 0;
 
         if (!count) return;
 
-        let result = weight - (tare * count) - (palletFlag === 1 ? PALLET_WEIGHT : 0);
+        let result = weight - (item.tare * count) - (palletFlag === 1 ? PALLET_WEIGHT : 0);
         if (result < 0) result = 0;
 
         output += `${item.name}${count}件\n`;
-        output += `實秤：${weight} - (${tare}×${count})`;
+        output += `實秤：${weight} - (${item.tare}×${count})`;
         if (palletFlag === 1) output += ` - ${PALLET_WEIGHT}(綠園板)`;
         output += ` = ${result.toFixed(2)}kg\n\n`;
     });
@@ -121,6 +184,10 @@ function copyText() {
     navigator.clipboard.writeText(output);
     alert("已複製！");
 }
+
+// 初始化
+renderTable();
+
 </script>
 
 </body>
