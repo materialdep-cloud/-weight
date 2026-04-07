@@ -173,7 +173,7 @@ function render(){
                 placeholder="總重" value="${d.weight||""}"
                 oninput="update('${item.id}','weight',this.value)">
                 
-            <input type="number" min="0.0001" step="any" inputmode="decimal"
+            <input type="number" min="1" step="1" inputmode="numeric"
                 placeholder="件數" value="${d.count||""}"
                 oninput="update('${item.id}','count',this.value)">
         </div>
@@ -200,11 +200,18 @@ function render(){
 function update(id,key,val){
 
     if(key==="weight" || key==="count"){
+
         let num = parseFloat(val);
 
-        // 🚫 禁止 0 / 負數
+        if(key==="count"){
+            num = Math.floor(num); // 👉 強制整數
+        }
+
+        // 🚫 禁止 0 / 負數 / NaN
         if(num <= 0 || isNaN(num)){
             val = "";
+        }else{
+            val = num;
         }
     }
 
