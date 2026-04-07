@@ -18,15 +18,8 @@ body { margin:0; font-family:Arial; background:#f0f2f5; }
     box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-.card.active {
-    background:#c8e6c9;
-    color:#000;
-}
-
-.card.error {
-    background:#c62828;
-    color:#fff;
-}
+.card.active { background:#c8e6c9; }
+.card.error { background:#c62828; color:#fff; }
 
 .title { font-size:18px; margin-bottom:5px; }
 
@@ -50,7 +43,6 @@ input { padding:6px; font-size:16px; }
 .result {
     font-size:22px;
     font-weight:bold;
-    color:#000;
 }
 
 .warning {
@@ -86,13 +78,23 @@ input { padding:6px; font-size:16px; }
 
 .fab-copy { bottom:90px; background:#2e7d32; }
 .fab-clear { bottom:20px; background:#d32f2f; }
-
 </style>
 </head>
 
 <body>
 
 <div class="header">📦 重量扣重計算</div>
+
+<!-- 🔍 搜尋 -->
+<div style="padding:10px;">
+    <input 
+        id="search"
+        placeholder="🔍 搜尋品名..."
+        style="width:100%;padding:8px;font-size:16px;"
+        oninput="render()"
+    >
+</div>
+
 <div class="container" id="app"></div>
 
 <div class="add-box">
@@ -110,7 +112,7 @@ const PALLET = 8.2;
 
 function createItem(name, tare, icon=""){
     return {
-        id: Date.now() + Math.random(),
+        id: crypto.randomUUID(),
         name,
         tare,
         icon
@@ -134,8 +136,6 @@ createItem("辣椒",1.2,"🌶️"),
 createItem("櫛瓜",0.84,"🥒"),
 createItem("日本紅春香地瓜",0.45,"🍠"),
 createItem("日本大蔥",0.45,"🧅"),
-
-/* 🆕 新增 */
 createItem("阿成南瓜(藍苔)",2.38,"🎃"),
 createItem("栗子南瓜(家福苔)",3.13,"🌰🎃")
 ];
@@ -153,7 +153,12 @@ function render(){
     const app = document.getElementById("app");
     app.innerHTML = "";
 
-    items.forEach((item)=>{
+    const keyword = document.getElementById("search")?.value?.toLowerCase() || "";
+
+    items
+    .filter(item => item.name.toLowerCase().includes(keyword))
+    .forEach((item)=>{
+
         const d = data[item.id] || {};
         let isCustom = savedItems.find(x=>x.id===item.id);
 
@@ -165,9 +170,17 @@ function render(){
         <div class="title">${item.icon||""} ${item.name}</div>
 
         <div class="row">
-            <input type="number" placeholder="總重" value="${d.weight||""}" oninput="update('${item.id}','weight',this.value)">
-            <input type="number" placeholder="件數" value="${d.count||""}" oninput="update('${item.id}','count',this.value)">
-            <input placeholder="棧板" value="${d.pallet||""}" oninput="this.value=this.value.replace(/[^1]/g,'');update('${item.id}','pallet',this.value)">
+            <input type="number" min="0" step="any" inputmode="decimal"
+                placeholder="總重" value="${d.weight||""}"
+                oninput="update('${item.id}','weight',this.value)">
+                
+            <input type="number" min="0" step="any" inputmode="decimal"
+                placeholder="件數" value="${d.count||""}"
+                oninput="update('${item.id}','count',this.value)">
+                
+            <input placeholder="棧板"
+                value="${d.pallet||""}"
+                oninput="this.value=this.value.replace(/[^1]/g,'');update('${item.id}','pallet',this.value)">
         </div>
 
         <div>箱/籃重：${item.tare}</div>
@@ -183,15 +196,26 @@ function render(){
 }
 
 function update(id,key,val){
+
+    // 🚫 禁止負數
+    if((key==="weight" || key==="count") && val < 0){
+        val = "";
+    }
+
     if(!data[id]) data[id]={};
     data[id][key]=val;
+
     save();
     calcAll();
 }
 
 function calcAll(){
     items.forEach((item)=>{
+
         const d = data[item.id] || {};
+
+        let hasWeight = d.weight !== undefined && d.weight !== "";
+        let hasCount = d.count !== undefined && d.count !== "";
 
         let weight = parseFloat(d.weight) || 0;
         let count = parseFloat(d.count) || 0;
@@ -199,9 +223,11 @@ function calcAll(){
 
         let deduction = (item.tare*count)+pallet;
         let result = weight - deduction;
-        if(result<0) result=0;
 
-        let warning = weight < deduction;
+        let invalidPair = (hasWeight && !hasCount) || (!hasWeight && hasCount);
+        let warning = weight < deduction || invalidPair;
+
+        if(result<0) result=0;
 
         let extra = "";
         if(["苜蓿","豆苗"].includes(item.name)){
@@ -209,13 +235,19 @@ function calcAll(){
         }
 
         const el = document.getElementById("result"+item.id);
-        el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${extra} ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
-
         const card = document.getElementById("card"+item.id);
+
+        if(!el || !card) return;
+
+        if(invalidPair){
+            el.innerHTML = `⚠️ 總重與件數需同時輸入`;
+        }else{
+            el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${extra} ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
+        }
 
         card.classList.remove("active","error");
 
-        if(d.weight||d.count||d.pallet){
+        if(hasWeight || hasCount || d.pallet){
             if(warning){
                 card.classList.add("error");
             }else{
@@ -229,7 +261,14 @@ function add(){
     const name = document.getElementById("name");
     const tare = document.getElementById("tare");
 
-    if(!name.value||!tare.value) return alert("請填資料");
+    if(!name.value.trim()){
+        alert("請輸入品名");
+        return;
+    }
+    if(!tare.value || tare.value<=0){
+        alert("請輸入正確重量");
+        return;
+    }
 
     const newItem = createItem(name.value, parseFloat(tare.value));
     savedItems.push(newItem);
@@ -277,20 +316,13 @@ function copy(){
         if(result<0) result=0;
 
         text+=`${item.name}${count}件\n`;
-        text+=`實秤：${weight}(總重)`;
-        text+=` - (${item.tare}×${count} 箱/籃重)`;
+        text+=`實秤：${weight} - (${item.tare}×${count})`;
 
         if(pallet){
-            text+=` - ${PALLET}(棧板)`;
+            text+=` - ${PALLET}`;
         }
 
-        text+=` = ${result.toFixed(2)}kg`;
-
-        if(["苜蓿","豆苗"].includes(item.name)){
-            text+=`（${(result/0.6).toFixed(2)} 台斤）`;
-        }
-
-        text+=`\n\n`;
+        text+=` = ${result.toFixed(2)}kg\n\n`;
     });
 
     if(!text){
