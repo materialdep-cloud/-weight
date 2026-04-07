@@ -47,10 +47,21 @@ body {
     display: flex;
     gap: 5px;
     margin-bottom: 5px;
+    flex-wrap: wrap;
+}
+
+.row input {
+    flex: 1 1 45%;
+    min-width: 120px;
+}
+
+@media (max-width: 600px) {
+    .row input {
+        flex: 1 1 100%;
+    }
 }
 
 input {
-    flex: 1;
     padding: 6px;
     font-size: 16px;
 }
@@ -64,12 +75,13 @@ input {
     background: white;
     padding: 10px;
     border-radius: 10px;
+    margin: 10px;
 }
 
 .fab {
     position: fixed;
     right: 20px;
-    bottom: 20px;
+    bottom: 90px;
     background: #2e7d32;
     color: white;
     border-radius: 50%;
@@ -79,6 +91,16 @@ input {
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 9999;
+}
+
+.clear-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    background: #d32f2f;
+    color: white;
+    border: none;
 }
 </style>
 </head>
@@ -89,18 +111,29 @@ input {
 
 <div class="container" id="app"></div>
 
+<!-- ➕ 新增品項 -->
 <div class="add-box">
     品名 <input id="name">
     箱重 <input id="tare" type="number">
     <button onclick="add()">➕新增</button>
 </div>
 
+<!-- 🗑 清空 -->
+<button class="clear-btn" onclick="clearData()">🗑 清空資料</button>
+
+<!-- 📋 複製 -->
+<button onclick="copy()" style="width:100%;padding:15px;font-size:18px;">
+📋 一鍵複製
+</button>
+
+<!-- 📋 浮動 -->
 <div class="fab" onclick="copy()">📋</div>
 
 <script>
+
 const PALLET = 8.2;
 
-let items = JSON.parse(localStorage.getItem("items")) || [
+let defaultItems = [
 {name:"歐式生菜", icon:"🥬✨", tare:1.8},
 {name:"日本山藥(無填充物)", icon:"🥔", tare:0.73},
 {name:"豆苗", icon:"🌿", tare:1.2},
@@ -119,10 +152,13 @@ let items = JSON.parse(localStorage.getItem("items")) || [
 {name:"日本大蔥", icon:"🧅", tare:0.45}
 ];
 
+let savedItems = JSON.parse(localStorage.getItem("customItems")) || [];
+let items = [...defaultItems, ...savedItems];
+
 let data = JSON.parse(localStorage.getItem("data")) || {};
 
 function save(){
-    localStorage.setItem("items", JSON.stringify(items));
+    localStorage.setItem("customItems", JSON.stringify(savedItems));
     localStorage.setItem("data", JSON.stringify(data));
 }
 
@@ -136,7 +172,8 @@ function render(){
         const div = document.createElement("div");
         div.className = "card " + (d.weight||d.count||d.pallet?"active":"");
 
-        const result = (d.weight||0) - (item.tare*(d.count||0)) - ((d.pallet==1)?PALLET:0);
+        let result = (d.weight||0) - (item.tare*(d.count||0)) - ((d.pallet==1)?PALLET:0);
+        if(result<0) result=0;
 
         div.innerHTML = `
         <div class="title">${item.icon||""} ${item.name}</div>
@@ -151,7 +188,7 @@ function render(){
         </div>
 
         <div>箱重：${item.tare}</div>
-        <div class="result">→ 實秤：${result>0?result.toFixed(2):0} kg</div>
+        <div class="result">→ 實秤：${result.toFixed(2)} kg</div>
         `;
 
         app.appendChild(div);
@@ -165,24 +202,41 @@ function update(i,key,val){
     render();
 }
 
+// ➕ 新增
 function add(){
     const name = document.getElementById("name").value;
     const tare = parseFloat(document.getElementById("tare").value);
 
-    if(!name||!tare) return alert("填資料");
+    if(!name||!tare) return alert("請填資料");
 
-    items.push({name,tare});
+    const newItem = {name,tare};
+    savedItems.push(newItem);
+    items.push(newItem);
+
+    save();
+    render();
+
+    document.getElementById("name").value="";
+    document.getElementById("tare").value="";
+}
+
+// 🗑 清空
+function clearData(){
+    if(!confirm("確定要清空全部資料？")) return;
+
+    data = {};
     save();
     render();
 }
 
+// 📋 複製
 function copy(){
     let text="";
     items.forEach((item,i)=>{
         const d=data[i];
         if(!d||!d.count) return;
 
-        let r = (d.weight||0)-(item.tare*d.count)-((d.pallet==1)?PALLET:0);
+        let r=(d.weight||0)-(item.tare*d.count)-((d.pallet==1)?PALLET:0);
         if(r<0) r=0;
 
         text+=`${item.name}${d.count}件\n實秤:${r.toFixed(2)}kg\n\n`;
@@ -193,6 +247,7 @@ function copy(){
 }
 
 render();
+
 </script>
 
 </body>
