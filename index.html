@@ -78,11 +78,29 @@ input {
     margin: 10px;
 }
 
-.fab {
+/* 📋 複製 */
+.fab-copy {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    background: #2e7d32;
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 26px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* 🗑 清空 */
+.fab-clear {
     position: fixed;
     right: 20px;
     bottom: 90px;
-    background: #2e7d32;
+    background: #d32f2f;
     color: white;
     border-radius: 50%;
     width: 60px;
@@ -93,15 +111,6 @@ input {
     align-items: center;
     z-index: 9999;
 }
-
-.clear-btn {
-    width: 100%;
-    padding: 15px;
-    font-size: 18px;
-    background: #d32f2f;
-    color: white;
-    border: none;
-}
 </style>
 </head>
 
@@ -111,23 +120,12 @@ input {
 
 <div class="container" id="app"></div>
 
-<!-- ➕ 新增品項 -->
+<!-- ➕ 新增 -->
 <div class="add-box">
     品名 <input id="name">
     箱重 <input id="tare" type="number">
     <button onclick="add()">➕新增</button>
 </div>
-
-<!-- 🗑 清空 -->
-<button class="clear-btn" onclick="clearData()">🗑 清空資料</button>
-
-<!-- 📋 複製 -->
-<button onclick="copy()" style="width:100%;padding:15px;font-size:18px;">
-📋 一鍵複製
-</button>
-
-<!-- 📋 浮動 -->
-<div class="fab" onclick="copy()">📋</div>
 
 <script>
 
@@ -220,13 +218,16 @@ function add(){
     document.getElementById("tare").value="";
 }
 
-// 🗑 清空
+// 🗑 清空（雙重確認）
 function clearData(){
     if(!confirm("確定要清空全部資料？")) return;
+    if(!confirm("⚠️ 資料將全部清除，無法復原！\n真的要清空嗎？")) return;
 
     data = {};
     save();
     render();
+
+    alert("✅ 已清空！");
 }
 
 // 📋 複製
@@ -249,6 +250,12 @@ function copy(){
 render();
 
 </script>
+
+<!-- 🗑 清空按鈕 -->
+<div class="fab-clear" onclick="clearData()">🗑</div>
+
+<!-- 📋 複製按鈕 -->
+<div class="fab-copy" onclick="copy()">📋</div>
 
 </body>
 </html>
