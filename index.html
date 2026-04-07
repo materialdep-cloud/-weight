@@ -97,7 +97,7 @@ input { padding:6px; font-size:16px; }
 
 <div class="add-box">
     品名 <input id="name">
-    箱/藍重 <input id="tare" type="number">
+    箱/籃重 <input id="tare" type="number">
     <button onclick="add()">➕新增</button>
 </div>
 
@@ -170,7 +170,7 @@ function render(){
             <input placeholder="棧板" value="${d.pallet||""}" oninput="this.value=this.value.replace(/[^1]/g,'');update('${item.id}','pallet',this.value)">
         </div>
 
-        <div>箱重：${item.tare}</div>
+        <div>箱/籃重：${item.tare}</div>
         <div class="result" id="result${item.id}"></div>
 
         ${isCustom ? `<div class="delete-btn" onclick="deleteItem('${item.id}')">🗑 刪除品項</div>` : ``}
@@ -278,7 +278,7 @@ function copy(){
 
         text+=`${item.name}${count}件\n`;
         text+=`實秤：${weight}(總重)`;
-        text+=` - (${item.tare}×${count} 箱/藍重)`;
+        text+=` - (${item.tare}×${count} 箱/籃重)`;
 
         if(pallet){
             text+=` - ${PALLET}(棧板)`;
