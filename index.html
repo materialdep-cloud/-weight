@@ -85,7 +85,6 @@ input { padding:6px; font-size:16px; }
 
 <div class="header">📦 重量扣重計算</div>
 
-<!-- 🔍 搜尋 -->
 <div style="padding:10px;">
     <input 
         id="search"
@@ -170,18 +169,21 @@ function render(){
         <div class="title">${item.icon||""} ${item.name}</div>
 
         <div class="row">
-            <input type="number" min="0" step="any" inputmode="decimal"
+            <input type="number" min="0.0001" step="any" inputmode="decimal"
                 placeholder="總重" value="${d.weight||""}"
                 oninput="update('${item.id}','weight',this.value)">
                 
-            <input type="number" min="0" step="any" inputmode="decimal"
+            <input type="number" min="0.0001" step="any" inputmode="decimal"
                 placeholder="件數" value="${d.count||""}"
                 oninput="update('${item.id}','count',this.value)">
-                
-            <input placeholder="棧板"
-                value="${d.pallet||""}"
-                oninput="this.value=this.value.replace(/[^1]/g,'');update('${item.id}','pallet',this.value)">
         </div>
+
+        <label style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+            <input type="checkbox"
+                ${d.pallet==1 ? "checked" : ""}
+                onchange="update('${item.id}','pallet',this.checked?1:0)">
+            棧板
+        </label>
 
         <div>箱/籃重：${item.tare}</div>
         <div class="result" id="result${item.id}"></div>
@@ -197,9 +199,13 @@ function render(){
 
 function update(id,key,val){
 
-    // 🚫 禁止負數
-    if((key==="weight" || key==="count") && val < 0){
-        val = "";
+    if(key==="weight" || key==="count"){
+        let num = parseFloat(val);
+
+        // 🚫 禁止 0 / 負數
+        if(num <= 0 || isNaN(num)){
+            val = "";
+        }
     }
 
     if(!data[id]) data[id]={};
