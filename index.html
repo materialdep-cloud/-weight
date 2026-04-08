@@ -63,6 +63,24 @@ input { padding:6px; font-size:16px; }
     margin:10px;
 }
 
+/* 🔥 新增：棧板放大 + 間距 */
+.pallet-group {
+    display: flex;
+    gap: 25px;
+    margin: 8px 0;
+}
+
+.pallet-option {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pallet-option input {
+    transform: scale(1.6);
+}
+
 .fab-copy, .fab-clear{
     position:fixed;
     right:20px;
@@ -148,7 +166,6 @@ function save(){
     localStorage.setItem("data", JSON.stringify(data));
 }
 
-// 🔍 模糊搜尋（任意字匹配）
 function fuzzyMatch(name, keyword){
     name = name.toLowerCase();
     keyword = keyword.toLowerCase().replace(/\s+/g,"");
@@ -191,12 +208,22 @@ function render(){
                 oninput="update('${item.id}','count',this.value)">
         </div>
 
-        <label>
-            <input type="checkbox"
-                ${d.pallet==1 ? "checked" : ""}
-                onchange="update('${item.id}','pallet',this.checked?1:0)">
-            棧板1塊
-        </label>
+        <!-- 🔥 改這裡：棧板改成單選 -->
+        <div class="pallet-group">
+            <label class="pallet-option">
+                <input type="radio" name="pallet-${item.id}"
+                    ${d.pallet==0 || d.pallet===undefined ? "checked" : ""}
+                    onchange="update('${item.id}','pallet',0)">
+                棧板 0 塊
+            </label>
+
+            <label class="pallet-option">
+                <input type="radio" name="pallet-${item.id}"
+                    ${d.pallet==1 ? "checked" : ""}
+                    onchange="update('${item.id}','pallet',1)">
+                棧板 1 塊
+            </label>
+        </div>
 
         <div>箱/籃重：${item.tare}</div>
         <div class="result" id="result${item.id}"></div>
@@ -272,7 +299,7 @@ function calcAll(){
 
         card.classList.remove("active","error");
 
-        if(hasWeight || hasCount || d.pallet){
+        if(hasWeight || hasCount || d.pallet!==undefined){
             if(warning){
                 card.classList.add("error");
             }else{
@@ -313,7 +340,6 @@ function deleteItem(id){
     items = items.filter(x=>x.id!=id);
     delete data[id];
 
-    // 👉 清空搜尋（恢復全部顯示）
     document.getElementById("search").value = "";
 
     save();
