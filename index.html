@@ -274,10 +274,17 @@ function calcAll(){
 
         if(!el || !card) return;
 
+        // ⭐新增：台斤顯示（只限苜蓿 & 豆苗）
+        let taiJinText = "";
+        if(item.name.includes("苜蓿") || item.name.includes("豆苗")){
+            let taiJin = result / 0.6;
+            taiJinText = `（${taiJin.toFixed(2)} 台斤）`;
+        }
+
         if(invalidPair){
             el.innerHTML = `⚠️ 總重與件數需同時輸入`;
         }else{
-            el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
+            el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${taiJinText} ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
         }
 
         card.classList.remove("active","error");
@@ -302,7 +309,6 @@ function clearData(){
     render();
 }
 
-// ⭐新增：刷新提醒
 function checkLastData(){
     let hasData = Object.values(data).some(d => 
         d && (d.weight || d.count || d.pallet !== undefined)
@@ -348,7 +354,6 @@ function copy(){
     alert("已複製");
 }
 
-// ⭐執行
 render();
 checkLastData();
 
