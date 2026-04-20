@@ -85,12 +85,36 @@ input { padding:6px; font-size:16px; }
 
 .fab-copy { bottom:90px; background:#2e7d32; }
 .fab-clear { bottom:20px; background:#d32f2f; }
+
+/* ⭐新增按鈕樣式 */
+.top-link-btn{
+    display:inline-block;
+    margin:10px;
+    padding:6px 12px;
+    font-size:14px;
+    background:#6d4c41;   
+    color:#fff;
+    border-radius:8px;
+    text-decoration:none;
+    transition:0.2s;
+}
+
+.top-link-btn:hover{
+    background:#4e342e;   
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">📦 重量扣重計算</div>
+
+<!-- ⭐新增按鈕 -->
+<a href="https://materialdep-cloud.github.io/lettuce-calculator/" 
+   target="_blank" 
+   class="top-link-btn">
+   邱薏芬(土耕)
+</a>
 
 <div style="padding:10px;">
     <input 
@@ -129,9 +153,10 @@ function createItem(name, tare, icon="", id=null){
 }
 
 let defaultItems = [
-createItem("歐式生菜",1.8,"🥬✨","item1"),
+createItem("歐式生菜(土耕-黑苔裝)",1.8,"💧🥬","item1"),
+createItem("歐式生菜(水耕-紙箱裝)",1.49,"🌱🥬","item1"),
 createItem("日本山藥(無填充物)",0.73,"🥔","item2"),
-createItem("豆苗",1.2,"🌿","item3"),
+createItem("小豆苗",1.2,"🌿","item3"),
 createItem("苜蓿",0.89,"🌱","item4"),
 createItem("興家洋菇",0.65,"🍄","item5"),
 createItem("本產美生菜",1.45,"🥬","item6"),
@@ -274,17 +299,10 @@ function calcAll(){
 
         if(!el || !card) return;
 
-        // ⭐新增：台斤顯示（只限苜蓿 & 豆苗）
-        let taiJinText = "";
-        if(item.name.includes("苜蓿") || item.name.includes("豆苗")){
-            let taiJin = result / 0.6;
-            taiJinText = `（${taiJin.toFixed(2)} 台斤）`;
-        }
-
         if(invalidPair){
             el.innerHTML = `⚠️ 總重與件數需同時輸入`;
         }else{
-            el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${taiJinText} ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
+            el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
         }
 
         card.classList.remove("active","error");
