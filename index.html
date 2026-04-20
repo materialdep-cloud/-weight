@@ -86,21 +86,42 @@ input { padding:6px; font-size:16px; }
 .fab-copy { bottom:90px; background:#2e7d32; }
 .fab-clear { bottom:20px; background:#d32f2f; }
 
-/* ⭐新增按鈕樣式 */
-.top-link-btn{
-    display:inline-block;
+/* ⭐按鈕區優化 */
+.top-btn-group{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
     margin:10px;
-    padding:6px 12px;
-    font-size:14px;
-    background:#6d4c41;   
-    color:#fff;
-    border-radius:8px;
+}
+
+.top-link-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:10px 18px;
+    font-size:16px;
+    border-radius:12px;
     text-decoration:none;
+    color:#fff;
+    box-shadow:0 3px 8px rgba(0,0,0,0.15);
     transition:0.2s;
 }
 
-.top-link-btn:hover{
-    background:#4e342e;   
+/* 咖啡色 */
+.top-link-btn.brown{
+    background:#6d4c41;
+}
+.top-link-btn.brown:hover{
+    background:#4e342e;
+}
+
+/* 藍色 */
+.top-link-btn.blue{
+    background:#1976d2;
+}
+.top-link-btn.blue:hover{
+    background:#0d47a1;
 }
 </style>
 </head>
@@ -109,12 +130,20 @@ input { padding:6px; font-size:16px; }
 
 <div class="header">📦 重量扣重計算</div>
 
-<!-- ⭐新增按鈕 -->
-<a href="https://materialdep-cloud.github.io/lettuce-calculator/" 
-   target="_blank" 
-   class="top-link-btn">
-   邱薏芬(土耕)
-</a>
+<!-- ⭐按鈕區 -->
+<div class="top-btn-group">
+    <a href="https://materialdep-cloud.github.io/lettuce-calculator/" 
+       target="_blank" 
+       class="top-link-btn brown">
+       🌱 邱薏芬(土耕)
+    </a>
+
+    <a href="https://materialdep-cloud.github.io/lettuce-calculator_-1/" 
+       target="_blank" 
+       class="top-link-btn blue">
+       💧 川聖(水耕)
+    </a>
+</div>
 
 <div style="padding:10px;">
     <input 
@@ -153,8 +182,8 @@ function createItem(name, tare, icon="", id=null){
 }
 
 let defaultItems = [
-createItem("歐式生菜(土耕-黑苔裝)",1.8,"💧🥬","item1"),
-createItem("歐式生菜(水耕-紙箱裝)",1.49,"🌱🥬","item1"),
+createItem("歐式生菜(土耕-黑苔裝)",1.8,"🌱🥬","item1"),
+createItem("歐式生菜(水耕-紙箱裝)",1.49,"💧🥬","item20"),
 createItem("日本山藥(無填充物)",0.73,"🥔","item2"),
 createItem("小豆苗",1.2,"🌿","item3"),
 createItem("苜蓿",0.89,"🌱","item4"),
@@ -302,7 +331,15 @@ function calcAll(){
         if(invalidPair){
             el.innerHTML = `⚠️ 總重與件數需同時輸入`;
         }else{
-            el.innerHTML = `→ 實秤：${result.toFixed(2)} kg ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
+           let jinText = "";
+
+         // ⭐只有這兩個品項顯示台斤
+         if(item.name.includes("小豆苗") || item.name.includes("苜蓿")){
+         let jin = result / 0.6;
+         jinText = ` (${jin.toFixed(2)}台斤)`;
+         }
+
+         el.innerHTML = `→ 實秤：${result.toFixed(2)} kg${jinText}             ${warning?'<span class="warning">⚠️重量異常</span>':''}`;
         }
 
         card.classList.remove("active","error");
