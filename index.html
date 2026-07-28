@@ -299,7 +299,7 @@
             createItem("本產紫高麗菜", 1.22, "🟣🥬", "item16"),
             createItem("進口紫高麗菜", 0.73, "🟣🥬", "item17"),
             createItem("小黃瓜/番茄黑苔", 1.55, "🥒🍅", "item18"),
-            createItem("小番茄", 1.55, "🍅", "item19"),
+            createItem("小番茄", 0.7, "🍅", "item19"),
             createItem("辣椒", 1.2, "🌶️", "item20"),
             createItem("櫛瓜", 0.84, "🥒", "item21"),
             createItem("日本紅春香地瓜", 0.45, "🍠", "item22"),
@@ -322,6 +322,23 @@
                 return num >= 5 && num <= 17;
             }
             return false;
+        }
+
+        // 自動在前面新增「本產」、「進口」彩色高亮標籤，原本文字完整保留
+        function formatItemName(name) {
+            let badgesHtml = '';
+
+            // 檢查並新增 本產 標籤
+            if (name.includes("本產")) {
+                badgesHtml += `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-700 text-white shadow-2xs mr-1.5"><i class="fa-solid fa-leaf text-[10px] mr-1"></i>本產</span>`;
+            }
+            
+            // 檢查並新增 進口 標籤
+            if (name.includes("進口")) {
+                badgesHtml += `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-blue-600 text-white shadow-2xs mr-1.5"><i class="fa-solid fa-plane-arrival text-[10px] mr-1"></i>進口</span>`;
+            }
+
+            return `<span class="inline-flex flex-wrap items-center gap-y-1">${badgesHtml}<span class="align-middle">${name}</span></span>`;
         }
 
         // Save state to local storage
@@ -459,8 +476,8 @@
                 card.innerHTML = `
                     <div>
                         <div class="flex items-start justify-between gap-2 mb-2">
-                            <h2 class="font-bold text-slate-800 text-base leading-snug">
-                                ${item.icon ? `<span class="mr-1">${item.icon}</span>` : ''}${item.name}
+                            <h2 class="font-bold text-slate-800 text-base leading-snug flex items-center flex-wrap gap-1">
+                                ${item.icon ? `<span class="mr-1 text-lg">${item.icon}</span>` : ''}${formatItemName(item.name)}
                             </h2>
                             ${isCustom ? `
                                 <button onclick="deleteItem('${item.id}')" class="text-red-400 hover:text-red-600 text-xs px-1.5 py-0.5 rounded-lg hover:bg-red-50 transition" title="刪除品項">
