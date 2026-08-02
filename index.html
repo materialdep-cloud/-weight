@@ -60,9 +60,9 @@
 
         /* Card active and error dynamic status styles */
         .card-active {
-            border-color: #22c55e !important;
-            background-color: #f0fdf4 !important;
-            box-shadow: 0 4px 14px -2px rgba(34, 197, 94, 0.18);
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+            box-shadow: 0 4px 14px -2px rgba(59, 130, 246, 0.2);
         }
         .card-error {
             border-color: #ef4444 !important;
@@ -766,7 +766,6 @@
 
         function generateReportText() {
             let text = "";
-            let totalNet = 0;
 
             items.forEach((item) => {
                 const d = data[item.id];
@@ -778,7 +777,6 @@
 
                 let result = weight - (item.tare * count) - pallet;
                 if (result < 0) result = 0;
-                totalNet += result;
 
                 let jinText = "";
                 if (item.name.includes("小豆苗") || item.name.includes("苜蓿")) {
@@ -796,12 +794,7 @@
                 text += ` = ${result.toFixed(2)}kg${jinText}\n\n`;
             });
 
-            if (text) {
-                text += `------------------------\n`;
-                text += `📊 當前報表總計淨重：${totalNet.toFixed(2)} kg\n`;
-            }
-
-            return text;
+            return text.trimEnd();
         }
 
         function copy() {
